@@ -37,8 +37,16 @@ function mqttdoorAccessory(log, config) {
 
   this.service = new Service.Door(this.name);
   this.service
-    .getCharacteristic(Characteristic.CurrentDoorState)
-      .on('get', this.getStatus.bind(this))
+    .getCharacteristic(Characteristic.CurrentPosition)
+      .on('get', this.getStatus.bind(this));
+
+  this.service
+    .getCharacteristic(Characteristic.PositionState)
+      .on('get', this.getPosition.bind(this));
+
+  this.service
+    .getCharacteristic(Characteristic.TargetPosition)
+      .on('get', this.getTarget.bind(this));
 
   // connect to MQTT broker
   this.client = mqtt.connect(this.url, this.options);
@@ -51,8 +59,8 @@ function mqttdoorAccessory(log, config) {
     //console.log(that.payloadisjson);
     if (topic == that.topics.getOn) {
         var status = JSON.parse(message);
-        that.on = (status[that.payloadname] == that.payloadon ? Characteristic.CurrentDoorState.CLOSED : Characteristic.CurrentDoorState.OPEN);
-        that.service.getCharacteristic(Characteristic.CurrentDoorState).setValue(that.on, undefined, 'fromSetValue'); 
+        that.on = (status[that.payloadname] == that.payloadon ? Characteristic.CurrentDoorState.OPEN : Characteristic.CurrentDoorState.CLOSED);
+        that.service.getCharacteristic(Characteristic.CurrentPosition).setValue(that.on, undefined, 'fromSetValue'); 
     }
   });
 
@@ -69,6 +77,16 @@ mqttdoorAccessory.prototype.getStatus = function(callback) {
     callback(null, this.on);
 }
 
+mqttdoorAccessory.prototype.getPosition = function(callback) {
+    callback(null, Characteristic.PositionState.STOPPED) ;
+}
+
+mqttdoorAccessory.prototype.getTarget = function(callback) {
+    callback(null, Characteristic.TargetDoorState.CLOSED);
+}
+
 mqttdoorAccessory.prototype.getServices = function() {
   return [this.service];
 }
+
+// end
